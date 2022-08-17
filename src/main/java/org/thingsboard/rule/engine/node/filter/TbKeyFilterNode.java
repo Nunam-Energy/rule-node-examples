@@ -29,7 +29,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 import java.io.IOException;
 
 
-@Slf4j
 @RuleNode(
         type = ComponentType.FILTER,
         name = "check key",

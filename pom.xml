@@ -33,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.dir>${basedir}</main.dir>
         <thingsboard.version>3.4.0</thingsboard.version>
-        <lombok.version>1.18.18</lombok.version>
+        <lombok.version>1.18.22</lombok.version>
         <guava.version>30.0-jre</guava.version>
         <!--         TEST SCOPE         -->
         <spring-boot-starter-test.version>2.7.0</spring-boot-starter-test.version>
@@ -137,6 +137,12 @@
             <version>${protobuf.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-clients</artifactId>
+			<version>3.2.1</version>
+		</dependency>
+		
     </dependencies>
 
     <build>

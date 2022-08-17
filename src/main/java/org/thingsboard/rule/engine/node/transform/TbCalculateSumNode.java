@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.TRANSFORMATION,
         name = "calculate sum",
