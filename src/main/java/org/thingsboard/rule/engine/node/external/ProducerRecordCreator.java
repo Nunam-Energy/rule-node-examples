@@ -35,44 +35,44 @@ public class ProducerRecordCreator {
 	private Message message;
 	
 	
-	private static final String TOPIC_NAME_PREFIX = "c1qmax.tb.battery.";
+	private static final String TOPIC_NAME_PREFIX = "qmax.tb.battery.";
 	private static final Map<String,String> keyMap = new HashMap<>();
 	private static final ObjectMapper MAPPER;
 	private static final TempStringVoltages TEMP_STRING_VOLTAGES; 
 	
 	static{
-		keyMap.put("B0Q", "discharge_capacity");
+		keyMap.put("B*Q", "discharge_capacity");
 		
-		keyMap.put("B0SOC", "soc");
+		keyMap.put("B*SOC", "soc");
 		
-		keyMap.put("B0Vp", "lv");
+		keyMap.put("B*Vp", "lv");
 		
-		keyMap.put("B0V1", "strv_1");
-		keyMap.put("B0V2", "strv_2");
-		keyMap.put("B0V3", "strv_3");
-		keyMap.put("B0V4", "strv_4");
-		keyMap.put("B0V5", "strv_5");
-		keyMap.put("B0V6", "strv_6");
-		keyMap.put("B0V7", "strv_7");
-		keyMap.put("B0V8", "strv_8");
-		keyMap.put("B0V9", "strv_9");
-		keyMap.put("B0V10", "strv_10");
-		keyMap.put("B0V11", "strv_11");
-		keyMap.put("B0V12", "strv_12");
-		keyMap.put("B0V13", "strv_13");
-		keyMap.put("B0V14", "strv_14");
-		keyMap.put("B0V15", "strv_15");
-		keyMap.put("B0V16", "strv_16");
-		keyMap.put("B0V17", "strv_17");
-		keyMap.put("B0V18", "strv_18");
-		keyMap.put("B0V19", "strv_19");
-		keyMap.put("B0V20", "strv_20");
+		keyMap.put("B*V1", "strv_1");
+		keyMap.put("B*V2", "strv_2");
+		keyMap.put("B*V3", "strv_3");
+		keyMap.put("B*V4", "strv_4");
+		keyMap.put("B*V5", "strv_5");
+		keyMap.put("B*V6", "strv_6");
+		keyMap.put("B*V7", "strv_7");
+		keyMap.put("B*V8", "strv_8");
+		keyMap.put("B*V9", "strv_9");
+		keyMap.put("B*V10", "strv_10");
+		keyMap.put("B*V11", "strv_11");
+		keyMap.put("B*V12", "strv_12");
+		keyMap.put("B*V13", "strv_13");
+		keyMap.put("B*V14", "strv_14");
+		keyMap.put("B*V15", "strv_15");
+		keyMap.put("B*V16", "strv_16");
+		keyMap.put("B*V17", "strv_17");
+		keyMap.put("B*V18", "strv_18");
+		keyMap.put("B*V19", "strv_19");
+		keyMap.put("B*V20", "strv_20");
 		
-		keyMap.put("B0I", "ic");
+		keyMap.put("B*I", "ic");
 		
-		keyMap.put("B0T1", "tmp_1");
+		keyMap.put("B*T1", "tmp_1");
 		
-		keyMap.put("B0T2", "tmp_2");
+		keyMap.put("B*T2", "tmp_2");
 		
 		MAPPER = new ObjectMapper();
 		
@@ -92,15 +92,15 @@ public class ProducerRecordCreator {
 		for(Field field:fields) {
 			field.setAccessible(true);
 			Object val = field.get(this.message);
-			if(val==null || keyMap.get(field.getName())==null) {
+			if(val==null || keyMap.get(getGenericKeyName(field.getName()))==null) {
 				continue;
 			}
 			
-			if(field.getName().contains("B0V") && !field.getName().equals("B0Vp")) {
-				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(this.message.getDeviceId(), this.message.getTs(), Integer.parseInt(field.getName().substring(3)), (String)val);
+			if(field.getName().matches("^B\\dV[0-9]?[0-9]?$")) {
+				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), this.message.getTs(), Integer.parseInt(field.getName().substring(3)), (String)val);
 				if(msg!=null) {
 					String kafkaJson = MAPPER.writeValueAsString(msg);
-					ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId(), "strv", kafkaJson);
+					ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), "strv", kafkaJson);
 					this.records.add(record);
 				}
 			}else {
@@ -109,12 +109,20 @@ public class ProducerRecordCreator {
 				kafkaMessage.setValue(value);
 				kafkaMessage.setTs(this.message.getTs());
 				String kafkaJson = MAPPER.writeValueAsString(kafkaMessage);
-				ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId(), keyMap.get(field.getName()), kafkaJson);
+				ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), keyMap.get(getGenericKeyName(field.getName())), kafkaJson);
 				this.records.add(record);
 			}
 			
 		}
 		
+	}
+	
+	private String getGenericKeyName(String keyName) {
+		return keyName.charAt(0)+"*"+keyName.substring(2);
+	}
+	
+	private char getModulePosition(String keyName) {
+		return keyName.charAt(1);
 	}
 
 	public List<ProducerRecord<String, String>> getRecords() {
