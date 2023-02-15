@@ -15,9 +15,10 @@
  */
 package org.thingsboard.rule.engine.node.external;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Assert;
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProducerRecordCreatorTest {
 
 	private static String json;
+	private KeyMap[] keyMaps;
 	
 	@Before
 	public void set() {
@@ -64,6 +66,51 @@ public class ProducerRecordCreatorTest {
 				"    \"B0V19\": 1019,\n" +
 				"    \"B0V20\": 1020\n" +
 				"}";
+		this.keyMaps = new KeyMap[4];
+		
+		KeyMap keyMap = new KeyMap();
+		keyMap.setProfileId(11);
+		keyMap.setIc("B{p}I");
+		keyMap.setId("B{p}I");
+		keyMap.setLv("B{p}Vp");
+		keyMap.setSoc("B{p}SOC");
+		keyMap.setStrV("B{p}V{i}");
+		keyMap.setTmp("B{p}T1");
+		this.keyMaps[0] = keyMap;
+		
+		
+		keyMap = new KeyMap();
+		keyMap.setProfileId(5);
+		keyMap.setIc("B{p}I");
+		keyMap.setId("B{p}I");
+		keyMap.setLv("B{p}Vp");
+		keyMap.setSoc("B{p}SOC");
+		keyMap.setStrV("B{p}V{i}");
+		keyMap.setTmp("B{p}T1");
+		this.keyMaps[1] = keyMap;
+		
+		
+		keyMap = new KeyMap();
+		keyMap.setProfileId(15);
+		keyMap.setIc("B{p}I");
+		keyMap.setId("B{p}I");
+		keyMap.setLv("B{p}Vp");
+		keyMap.setSoc("B{p}SOC");
+		keyMap.setStrV("B{p}V{i}");
+		keyMap.setTmp("B{p}T1");
+		this.keyMaps[2] = keyMap;
+		
+		
+		keyMap = new KeyMap();
+		keyMap.setProfileId(17);
+		keyMap.setIc("Ip");
+		keyMap.setId("Ip");
+		keyMap.setLv("Vp");
+		keyMap.setSoc("SoC");
+		keyMap.setStrV("V{i}");
+		keyMap.setTmp("BT1");
+		this.keyMaps[3] = keyMap;
+		
 	}
 	
 	@Test
@@ -186,37 +233,232 @@ public class ProducerRecordCreatorTest {
 	}
 	
 	
-	
-	@Test
-	public void testGetGenericKeyName() throws Exception{
-		Method method = ProducerRecordCreator.class.getDeclaredMethod("getGenericKeyName", String.class);
-		method.setAccessible(true);
-		ProducerRecordCreator creator = new ProducerRecordCreator(null);
-		String name = (String)method.invoke(creator, "B0V1");
-		Assert.assertEquals("B*V1", name);
-		
-		name = (String)method.invoke(creator, "B0T1");
-		Assert.assertEquals("B*T1", name);
-		
-		name = (String)method.invoke(creator, "B0SOC");
-		Assert.assertEquals("B*SOC", name);
-		
-	}
-	
 	@Test
 	public void testGetModulePosition() throws Exception{
 		Method method = ProducerRecordCreator.class.getDeclaredMethod("getModulePosition", String.class);
 		method.setAccessible(true);
 		ProducerRecordCreator creator = new ProducerRecordCreator(null);
-		char c = (char) method.invoke(creator, "B2SOC");
-		Assert.assertEquals('2', c);
+		Integer c = (Integer) method.invoke(creator, "B2SOC");
+		Assert.assertEquals("2", c+"");
 		
-		c = (char) method.invoke(creator, "B2I");
-		Assert.assertEquals('2', c);
+		c = (Integer) method.invoke(creator, "B22SOC");
+		Assert.assertEquals("22", c+"");
 		
-		c = (char) method.invoke(creator, "B0Vp");
-		Assert.assertEquals('0', c);
+		c = (Integer) method.invoke(creator, "B999SOC");
+		Assert.assertEquals("999", c+"");
 		
+		c = (Integer) method.invoke(creator, "BSOC");
+		Assert.assertEquals("0", c+"");
+		
+	}
+	
+	@Test
+	public void testSetKeyMap() throws Exception{
+		 
+		
+		
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+//		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
+//		ResponseEntity entity = Mockito.mock(ResponseEntity.class);
+//		Mockito.when(restTemplate.getForEntity(Mockito.any(),Mockito.any())).thenReturn(entity);
+//		Mockito.when(entity.getBody()).thenReturn(Arrays.asList(this.keyMaps));
+//		
+//		Map<String, String> keyMap = new HashMap<>();
+//		Field rField = ProducerRecordCreator.class.getDeclaredField("keyMap");
+//		rField.setAccessible(true);
+//		rField.set(producerRecordCreator, keyMap);
+//		
+//		Field field = ProducerRecordCreator.class.getDeclaredField("restTemplate");
+//		field.setAccessible(true);
+//		field.set(producerRecordCreator, restTemplate);
+//		
+//		Method method = ProducerRecordCreator.class.getDeclaredMethod("setKeyMap");
+//		method.setAccessible(true);
+//		method.invoke(producerRecordCreator);
+//		
+//		System.out.println(keyMap);
+		
+		
+		
+	}
+	
+	@Test
+	public void testGetKeyIC() throws Exception{
+		 
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getKafkaKey", String.class);
+		method.setAccessible(true);
+		String kafkaKey = (String) method.invoke(producerRecordCreator, "B0I");
+		Assert.assertEquals("ic", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "Ip");
+		Assert.assertEquals("ic", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B1I");
+		Assert.assertEquals("ic", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B2I");
+		Assert.assertEquals("ic", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "C");
+		Assert.assertNull(kafkaKey);
+		
+		
+	}
+	
+	
+	@Test
+	public void testGetKeyLv() throws Exception{
+		 
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getKafkaKey", String.class);
+		method.setAccessible(true);
+		String kafkaKey = (String) method.invoke(producerRecordCreator, "B0Vp");
+		Assert.assertEquals("lv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "Vp");
+		Assert.assertEquals("lv", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B1Vp");
+		Assert.assertEquals("lv", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B2Vp");
+		Assert.assertEquals("lv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "v");
+		Assert.assertNull(kafkaKey);
+		
+		
+	}
+	
+	
+	@Test
+	public void testGetKeySOC() throws Exception{
+		 
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getKafkaKey", String.class);
+		method.setAccessible(true);
+		String kafkaKey = (String) method.invoke(producerRecordCreator, "B0SOC");
+		Assert.assertEquals("soc", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "SoC");
+		Assert.assertEquals("soc", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B1SOC");
+		Assert.assertEquals("soc", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B2SOC");
+		Assert.assertEquals("soc", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "soc");
+		Assert.assertNull(kafkaKey);
+		
+		
+	}
+	
+	@Test
+	public void testGetKeyTMP() throws Exception{
+		 
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getKafkaKey", String.class);
+		method.setAccessible(true);
+		String kafkaKey = (String) method.invoke(producerRecordCreator, "B0T1");
+		Assert.assertEquals("tmp", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B1T1");
+		Assert.assertEquals("tmp", kafkaKey);
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B2T1");
+		Assert.assertEquals("tmp", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "T1");
+		Assert.assertNull(kafkaKey);
+		
+		
+	}
+	
+	@Test
+	public void testGetKeySTRV() throws Exception{
+		 
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getKafkaKey", String.class);
+		method.setAccessible(true);
+		String kafkaKey = (String) method.invoke(producerRecordCreator, "B0V1");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B0V10");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B0V100");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B99V1");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "B99V999");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "V999");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "V99");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "V9");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "V1");
+		Assert.assertEquals("strv", kafkaKey);
+		
+		
+		
+		kafkaKey = (String) method.invoke(producerRecordCreator, "STRV");
+		Assert.assertNull(kafkaKey);
+		
+		
+	} 
+	
+	@Test
+	public void testPutKeys() throws Exception{
+		 
+		Map<String, List<String>> keyMapT = new HashMap<>();
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("putKeys", String.class, String.class, Map.class);
+		method.setAccessible(true);
+		ProducerRecordCreator creator = new ProducerRecordCreator(null);
+		for(KeyMap key : this.keyMaps) {
+			method.invoke(creator, "ic", key.getIc(), keyMapT);
+		}
+		Assert.assertEquals("{ic=[B{p}I, B{p}I, B{p}I, Ip]}", keyMapT.toString());
+				
+		
+	}
+	
+	@Test
+	public void testGetStringIndexFromKey() throws Exception{
+		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getStringIndexFromKey", String.class);
+		method.setAccessible(true);
+		Integer index = (Integer)method.invoke(producerRecordCreator, "B0V1");
+		Assert.assertEquals("1", index+"");
+		
+		index = (Integer)method.invoke(producerRecordCreator, "V1");
+		Assert.assertEquals("1", index+"");
+		
+		index = (Integer)method.invoke(producerRecordCreator, "B0V11");
+		Assert.assertEquals("11", index+"");
+		
+		index = (Integer)method.invoke(producerRecordCreator, "B99V99");
+		Assert.assertEquals("99", index+"");
+		
+		index = (Integer)method.invoke(producerRecordCreator, "B3V876");
+		Assert.assertEquals("876", index+"");
 	}
 	
 	

@@ -25,104 +25,156 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.springframework.web.client.RestTemplate;
 
 public class ProducerRecordCreator {
-	
+
 	private static final Logger logger = Logger.getLogger(ProducerRecordCreator.class);
 
 	private List<ProducerRecord<String, String>> records = new ArrayList<>();
 	private Message message;
-	
-	
+
 	private static final String TOPIC_NAME_PREFIX = "qmax.tb.battery.";
-	private static final Map<String,String> keyMap = new HashMap<>();
+
 	private static final ObjectMapper MAPPER;
-	private static final TempStringVoltages TEMP_STRING_VOLTAGES; 
-	
-	static{
-		keyMap.put("B*Q", "discharge_capacity");
-		
-		keyMap.put("B*SOC", "soc");
-		
-		keyMap.put("B*Vp", "lv");
-		
-		keyMap.put("B*V1", "strv_1");
-		keyMap.put("B*V2", "strv_2");
-		keyMap.put("B*V3", "strv_3");
-		keyMap.put("B*V4", "strv_4");
-		keyMap.put("B*V5", "strv_5");
-		keyMap.put("B*V6", "strv_6");
-		keyMap.put("B*V7", "strv_7");
-		keyMap.put("B*V8", "strv_8");
-		keyMap.put("B*V9", "strv_9");
-		keyMap.put("B*V10", "strv_10");
-		keyMap.put("B*V11", "strv_11");
-		keyMap.put("B*V12", "strv_12");
-		keyMap.put("B*V13", "strv_13");
-		keyMap.put("B*V14", "strv_14");
-		keyMap.put("B*V15", "strv_15");
-		keyMap.put("B*V16", "strv_16");
-		keyMap.put("B*V17", "strv_17");
-		keyMap.put("B*V18", "strv_18");
-		keyMap.put("B*V19", "strv_19");
-		keyMap.put("B*V20", "strv_20");
-		
-		keyMap.put("B*I", "ic");
-		
-		keyMap.put("B*T1", "tmp_1");
-		
-		keyMap.put("B*T2", "tmp_2");
-		
+	private static final TempStringVoltages TEMP_STRING_VOLTAGES;
+
+	private static Map<String, String> keyMap = new HashMap<>();
+	private static Map<String, Integer> partitionMap = new HashMap<>();
+
+	private static RestTemplate restTemplate = new RestTemplate();
+
+	static {
+		setKeyMap();
 		MAPPER = new ObjectMapper();
-		
 		TEMP_STRING_VOLTAGES = TempStringVoltages.getTempStringVoltages();
-		
+		partitionMap.put("ic", 1);
+		partitionMap.put("lv", 2);
+		partitionMap.put("soc", 3);
+		partitionMap.put("strv", 4);
+		partitionMap.put("tmp", 5);
+		System.out.println(keyMap);
 		logger.info("Custom Node: Map Initiated");
 	}
-	
+
 	public ProducerRecordCreator(Message message) {
 		this.message = message;
 	}
-	
+
 	public void process() throws Exception {
-		
+
 		Field[] fields = Message.class.getDeclaredFields();
-		
-		for(Field field:fields) {
+
+		for (Field field : fields) {
 			field.setAccessible(true);
 			Object val = field.get(this.message);
-			if(val==null || keyMap.get(getGenericKeyName(field.getName()))==null) {
+			String kafkaKey = getKafkaKey(field.getName());
+			if (val == null || kafkaKey == null) {
 				continue;
 			}
-			
-			if(field.getName().matches("^B\\dV[0-9]?[0-9]?$")) {
-				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), this.message.getTs(), Integer.parseInt(field.getName().substring(3)), (String)val);
-				if(msg!=null) {
+			Integer modulePosition = getModulePosition(field.getName());
+
+			if (kafkaKey.equals("strv")) {
+				Integer stringIndex = getStringIndexFromKey(field.getName());
+
+				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(
+						this.message.getDeviceId() + "." + modulePosition, this.message.getTs(), stringIndex,
+						(String) val);
+				if (msg != null) {
 					String kafkaJson = MAPPER.writeValueAsString(msg);
-					ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), "strv", kafkaJson);
+					ProducerRecord<String, String> record = new ProducerRecord<String, String>(
+							TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+							partitionMap.get("strv"), "strv", kafkaJson);
 					this.records.add(record);
 				}
-			}else {
-				String value = (String) val; 
+			} else {
+				String value = (String) val;
 				KafkaMessage kafkaMessage = new KafkaMessage();
 				kafkaMessage.setValue(value);
 				kafkaMessage.setTs(this.message.getTs());
 				String kafkaJson = MAPPER.writeValueAsString(kafkaMessage);
-				ProducerRecord<String, String> record =  new ProducerRecord<String, String>(TOPIC_NAME_PREFIX+this.message.getDeviceId()+"."+this.getModulePosition(field.getName()), keyMap.get(getGenericKeyName(field.getName())), kafkaJson);
+				ProducerRecord<String, String> record = new ProducerRecord<String, String>(
+						TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+						partitionMap.get(kafkaKey), kafkaKey, kafkaJson);
+
 				this.records.add(record);
 			}
-			
+
 		}
-		
+
 	}
-	
-	private String getGenericKeyName(String keyName) {
-		return keyName.charAt(0)+"*"+keyName.substring(2);
+
+	private String getKafkaKey(String fieldName) {
+		for (String key : keyMap.keySet()) {
+			if (fieldName.matches(key)) {
+				return keyMap.get(key);
+			}
+		}
+		return null;
 	}
-	
-	private char getModulePosition(String keyName) {
-		return keyName.charAt(1);
+
+	private Integer getStringIndexFromKey(String key) {
+		String[] nums = key.split("[^0-9]");
+		if (nums.length > 0) {
+			return Integer.parseInt(nums[nums.length - 1]);
+		} else {
+			return -1;
+		}
+	}
+
+	private static void setKeyMap() {
+
+		try {
+
+			Map<String, List<String>> keyMapT = new HashMap<>();
+			KeyMap[] keys = restTemplate.getForEntity("http://3.111.151.104:8085/api/profiles/key-map", KeyMap[].class)
+					.getBody();
+			for (KeyMap key : keys) {
+				putKeys("ic", key.getIc(), keyMapT);
+				putKeys("ic", key.getId(), keyMapT);
+				putKeys("lv", key.getLv(), keyMapT);
+				putKeys("soc", key.getSoc(), keyMapT);
+				putKeys("tmp", key.getTmp(), keyMapT);
+				putKeys("strv", key.getStrV(), keyMapT);
+
+			}
+			for (String key : keyMapT.keySet()) {
+				for (String deviceKey : keyMapT.get(key)) {
+					if (deviceKey == null) {
+						continue;
+					}
+					deviceKey = deviceKey.replaceAll("\\{p\\}", "(\\\\d){1,2}");
+					deviceKey = deviceKey.replaceAll("\\{i\\}", "(\\\\d){1,3}");
+					keyMap.put(deviceKey, key);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Error Setting Map");
+		}
+
+	}
+
+	private static void putKeys(String key, String value, Map<String, List<String>> keyMapT) {
+
+		List<String> storedKeys = keyMapT.get(key);
+		if (storedKeys == null) {
+			storedKeys = new ArrayList<String>();
+		}
+		storedKeys.add(value);
+		keyMapT.put(key, storedKeys);
+
+	}
+
+
+	private Integer getModulePosition(String keyName) {
+		if (keyName.matches("[^0-9]\\d+.+")) {
+			Integer number = Integer.parseInt(keyName.split("[^0-9]+")[1]);
+			return number;
+		} else {
+			return 0;
+		}
+
 	}
 
 	public List<ProducerRecord<String, String>> getRecords() {
@@ -132,6 +184,5 @@ public class ProducerRecordCreator {
 	public void setRecords(List<ProducerRecord<String, String>> records) {
 		this.records = records;
 	}
-	
-	
+
 }
