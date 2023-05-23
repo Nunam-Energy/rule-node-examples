@@ -126,23 +126,19 @@ public class ProducerRecordCreatorTest {
 		Message message = mapper.readValue(json,Message.class);
 		ProducerRecordCreator creator = new ProducerRecordCreator(message);
 		creator.process();
-		Assert.assertEquals(7, creator.getRecords().size());
+		Assert.assertEquals(6, creator.getRecords().size());
 		List<ProducerRecord<String, String>> records = creator.getRecords();
 		
-		ProducerRecord< String, String> record = records.get(6);
-		Assert.assertEquals("discharge_capacity", record.key());
+		ProducerRecord< String, String> record = records.get(5);
+		Assert.assertEquals("capacity_discharge", record.key());
 		Assert.assertTrue(record.value().contains("444"));
 		
 		record = records.get(1);
-		Assert.assertEquals("tmp_1", record.key());
+		Assert.assertEquals("tmp", record.key());
 		Assert.assertTrue(record.value().contains("32"));
 		
-		record = records.get(2);
-		Assert.assertEquals("tmp_2", record.key());
-		Assert.assertTrue(record.value().contains("33"));
 		
-		
-		record = records.get(5);
+		record = records.get(4);
 		Assert.assertEquals("soc", record.key());
 		Assert.assertTrue(record.value().contains("99"));
 		
@@ -150,11 +146,11 @@ public class ProducerRecordCreatorTest {
 		Assert.assertEquals("ic", record.key());
 		Assert.assertTrue(record.value().contains("3000"));
 		
-		record = records.get(4);
+		record = records.get(3);
 		Assert.assertEquals("lv", record.key());
 		Assert.assertTrue(record.value().contains("5000"));
 		
-		record = records.get(3);
+		record = records.get(2);
 		Assert.assertEquals("strv", record.key());
 		
 			
@@ -165,12 +161,18 @@ public class ProducerRecordCreatorTest {
 		
 		this.json = "{\n" + 
 				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				
 				"    \"ts\": \"1660657577000\",\n" + 
+				
 				"    \"B1Q\": 444,\n" +
+				
 				"    \"B1T1\": 32,\n" +
 				"    \"B1T2\": 33,\n" +
+				
 				"    \"B1SOC\": 99,\n" +
+				
 				"    \"B1I\": 3000,\n" +
+				
 				"    \"B1Vp\": 5000,\n" +
 				"    \"B1V1\": 1001,\n" + 
 				"    \"B1V2\": 1002,\n" + 
@@ -198,23 +200,23 @@ public class ProducerRecordCreatorTest {
 		Message message = mapper.readValue(json,Message.class);
 		ProducerRecordCreator creator = new ProducerRecordCreator(message);
 		creator.process();
-		Assert.assertEquals(7, creator.getRecords().size());
+		Assert.assertEquals(6, creator.getRecords().size());
 		List<ProducerRecord<String, String>> records = creator.getRecords();
 		
-		ProducerRecord< String, String> record = records.get(6);
-		Assert.assertEquals("discharge_capacity", record.key());
+		ProducerRecord< String, String> record = records.get(5);
+		Assert.assertEquals("capacity_discharge", record.key());
 		Assert.assertTrue(record.value().contains("444"));
 		
 		record = records.get(1);
-		Assert.assertEquals("tmp_1", record.key());
+		Assert.assertEquals("tmp", record.key());
 		Assert.assertTrue(record.value().contains("32"));
 		
-		record = records.get(2);
-		Assert.assertEquals("tmp_2", record.key());
-		Assert.assertTrue(record.value().contains("33"));
+//		record = records.get(2);
+//		Assert.assertEquals("tmp_2", record.key());
+//		Assert.assertTrue(record.value().contains("33"));
 		
 		
-		record = records.get(5);
+		record = records.get(4);
 		Assert.assertEquals("soc", record.key());
 		Assert.assertTrue(record.value().contains("99"));
 		
@@ -222,11 +224,11 @@ public class ProducerRecordCreatorTest {
 		Assert.assertEquals("ic", record.key());
 		Assert.assertTrue(record.value().contains("3000"));
 		
-		record = records.get(4);
+		record = records.get(3);
 		Assert.assertEquals("lv", record.key());
 		Assert.assertTrue(record.value().contains("5000"));
 		
-		record = records.get(3);
+		record = records.get(2);
 		Assert.assertEquals("strv", record.key());
 		
 			
@@ -379,7 +381,7 @@ public class ProducerRecordCreatorTest {
 		Assert.assertEquals("tmp", kafkaKey);
 		
 		kafkaKey = (String) method.invoke(producerRecordCreator, "T1");
-		Assert.assertNull(kafkaKey);
+		Assert.assertNotNull(kafkaKey);
 		
 		
 	}

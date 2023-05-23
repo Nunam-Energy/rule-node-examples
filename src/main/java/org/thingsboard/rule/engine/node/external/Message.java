@@ -328,4 +328,68 @@ public class Message {
 	@JsonProperty("B4Q")
 	private String B4Q;
 
+	// No Modules
+
+	@JsonProperty("Ip")
+	private String Ip;
+
+	@JsonProperty("T1")
+	private String T1;
+	@JsonProperty("T2")
+	private String T2;
+	@JsonProperty("T3")
+	private String T3;
+	@JsonProperty("T4")
+	private String T5;
+
+	@JsonProperty("V1")
+	private String V1;
+	@JsonProperty("V2")
+	private String V2;
+	@JsonProperty("V3")
+	private String v3;
+	@JsonProperty("V4")
+	private String V4;
+	@JsonProperty("V5")
+	private String V5;
+	@JsonProperty("V6")
+	private String V6;
+	@JsonProperty("V7")
+	private String V7;
+	@JsonProperty("V8")
+	private String V8;
+	@JsonProperty("V9")
+	private String V9;
+	@JsonProperty("V10")
+	private String V10;
+	@JsonProperty("V11")
+	private String V11;
+	@JsonProperty("V12")
+	private String V12;
+	@JsonProperty("V13")
+	private String V13;
+	@JsonProperty("V14")
+	private String V14;
+	@JsonProperty("V15")
+	private String V15;
+	@JsonProperty("V16")
+	private String V16;
+	@JsonProperty("V17")
+	private String V17;
+	@JsonProperty("V18")
+	private String V18;
+	@JsonProperty("V19")
+	private String V19;
+	@JsonProperty("V20")
+	private String V20;
+
+	@JsonProperty("Vp")
+	private String Vp;
+
+	@JsonProperty("SoC")
+	private String SoC;
+
+	@JsonProperty("Q")
+	private String Q;
+
 }

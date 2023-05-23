@@ -38,6 +38,7 @@ public class ProducerRecordCreator {
 
 	private static final ObjectMapper MAPPER;
 	private static final TempStringVoltages TEMP_STRING_VOLTAGES;
+	private static final TempStringVoltages TEMP_TEMP_SERIES;
 
 	private static Map<String, String> keyMap = new HashMap<>();
 	private static Map<String, Integer> partitionMap = new HashMap<>();
@@ -48,11 +49,14 @@ public class ProducerRecordCreator {
 		setKeyMap();
 		MAPPER = new ObjectMapper();
 		TEMP_STRING_VOLTAGES = TempStringVoltages.getTempStringVoltages();
+		TEMP_TEMP_SERIES = TempStringVoltages.getTempStringVoltages();
 		partitionMap.put("ic", 1);
 		partitionMap.put("lv", 2);
 		partitionMap.put("soc", 3);
 		partitionMap.put("strv", 4);
 		partitionMap.put("tmp", 5);
+		partitionMap.put("tmpSeries", 6);
+		partitionMap.put("capacityDischarge", 7);
 		System.out.println(keyMap);
 		logger.info("Custom Node: Map Initiated");
 	}
@@ -68,8 +72,11 @@ public class ProducerRecordCreator {
 		for (Field field : fields) {
 			field.setAccessible(true);
 			Object val = field.get(this.message);
+			if (val == null ) {
+				continue;
+			}
 			String kafkaKey = getKafkaKey(field.getName());
-			if (val == null || kafkaKey == null) {
+			if(kafkaKey == null) {
 				continue;
 			}
 			Integer modulePosition = getModulePosition(field.getName());
@@ -87,7 +94,22 @@ public class ProducerRecordCreator {
 							partitionMap.get("strv"), "strv", kafkaJson);
 					this.records.add(record);
 				}
-			} else {
+			} else if(kafkaKey.equals("tmpSeries")){
+				
+				Integer stringIndex = getStringIndexFromKey(field.getName());
+
+				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(
+						this.message.getDeviceId() + "." + modulePosition, this.message.getTs(), stringIndex,
+						(String) val);
+				if (msg != null) {
+					String kafkaJson = MAPPER.writeValueAsString(msg);
+					ProducerRecord<String, String> record = new ProducerRecord<String, String>(
+							TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+							partitionMap.get("tmpSeries"), "tmpSeries", kafkaJson);
+					this.records.add(record);
+				}
+				
+			}else {
 				String value = (String) val;
 				KafkaMessage kafkaMessage = new KafkaMessage();
 				kafkaMessage.setValue(value);
@@ -136,7 +158,8 @@ public class ProducerRecordCreator {
 				putKeys("soc", key.getSoc(), keyMapT);
 				putKeys("tmp", key.getTmp(), keyMapT);
 				putKeys("strv", key.getStrV(), keyMapT);
-
+				//putKeys("tmpSeries", key.getTmpSeries(), keyMapT);
+				putKeys("capacity_discharge", key.getCapacityDischarge(), keyMapT);
 			}
 			for (String key : keyMapT.keySet()) {
 				for (String deviceKey : keyMapT.get(key)) {

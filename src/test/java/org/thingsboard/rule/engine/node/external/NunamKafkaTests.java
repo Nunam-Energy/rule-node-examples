@@ -145,7 +145,7 @@ public class NunamKafkaTests {
 					String value = input.value();
 					
 					KafkaMessage message = mapper.readValue(value, KafkaMessage.class);
-					Assert.assertEquals("discharge_capacity",key);
+					Assert.assertEquals("capacity_discharge",key);
 					Assert.assertEquals("444",message.getValue());
 				}catch (Exception e) {
 					// TODO: handle exception
