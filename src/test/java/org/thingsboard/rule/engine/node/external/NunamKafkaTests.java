@@ -156,7 +156,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0Q\": 444\n" +
 				"}";
@@ -195,7 +195,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0I\": 444\n" +
 				"}";
@@ -229,7 +229,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V1\": 1001,\n" +
 				"    \"B0V2\": 1002,\n" +
@@ -295,7 +295,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V1\": 1001,\n" +
 				"    \"B0V2\": 1002,\n" +
@@ -354,7 +354,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V1\": 1001,\n" +
 				"    \"B0V2\": 1002,\n" +
@@ -374,7 +374,7 @@ public class NunamKafkaTests {
 		Assert.assertNull(NunamKafkaTests.assertHelper);
 
 		json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V7\": 1007,\n" +
 				"    \"B0V8\": 1008,\n" +
@@ -388,7 +388,7 @@ public class NunamKafkaTests {
 		Assert.assertNull(NunamKafkaTests.assertHelper);
 		
 		json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V13\": 1013,\n" +
 				"    \"B0V14\": 1014,\n" +
@@ -431,7 +431,7 @@ public class NunamKafkaTests {
 		NunamKafka kafka = new NunamKafka();
 		set(asserter, kafka);
 		String json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0V1\": 1001,\n" +
 				"    \"B0V2\": 1002,\n" +
@@ -450,7 +450,7 @@ public class NunamKafkaTests {
 		
 		
 		json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657578000\",\n" + 
 				"    \"B0V1\": 1001,\n" +
 				"    \"B0V2\": 1002,\n" +
@@ -483,7 +483,7 @@ public class NunamKafkaTests {
 		};
 		set(asserter, kafka);
 		json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657578000\",\n" + 
 				"    \"B0V7\": 1007,\n" +
 				"    \"B0V8\": 1008,\n" +

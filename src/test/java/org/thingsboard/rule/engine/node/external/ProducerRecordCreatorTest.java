@@ -37,7 +37,7 @@ public class ProducerRecordCreatorTest {
 	@Before
 	public void set() {
 		this.json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				"    \"ts\": \"1660657577000\",\n" + 
 				"    \"B0Q\": 444,\n" +
 				"    \"B0T1\": 32,\n" +
@@ -160,7 +160,7 @@ public class ProducerRecordCreatorTest {
 	public void testRecordsModule1() throws Exception{
 		
 		this.json = "{\n" + 
-				"    \"deviceId\": \"688bd700-1d69-11ed-9367-87c11a2a900d\",\n" + 
+				"    \"deviceId\": \"140cd230-0e3a-11ed-9bda-0163f5a9393b\",\n" + 
 				
 				"    \"ts\": \"1660657577000\",\n" + 
 				
@@ -211,10 +211,6 @@ public class ProducerRecordCreatorTest {
 		Assert.assertEquals("tmp", record.key());
 		Assert.assertTrue(record.value().contains("32"));
 		
-//		record = records.get(2);
-//		Assert.assertEquals("tmp_2", record.key());
-//		Assert.assertTrue(record.value().contains("33"));
-		
 		
 		record = records.get(4);
 		Assert.assertEquals("soc", record.key());
@@ -236,6 +232,33 @@ public class ProducerRecordCreatorTest {
 	
 	
 	@Test
+	public void testRecordsModule2() throws Exception{
+		
+		this.json = "{\n" + 
+				"    \"deviceId\": \"ea57a230-0523-11ee-9b6b-ada73bb29091\",\n" + 
+				
+				"    \"ts\": \"1660657577000\",\n" + 
+				
+				"    \"BT1\": 44\n" +
+				
+				"}";
+		
+		ObjectMapper mapper = new ObjectMapper();
+		Message message = mapper.readValue(json,Message.class);
+		ProducerRecordCreator creator = new ProducerRecordCreator(message);
+		creator.process();
+		Assert.assertEquals(1, creator.getRecords().size());
+		List<ProducerRecord<String, String>> records = creator.getRecords();
+		
+		ProducerRecord< String, String> record = records.get(0);
+		Assert.assertEquals("tmp", record.key());
+		Assert.assertTrue(record.value().contains("44"));
+		
+			
+	}
+	
+	
+	@Test
 	public void testGetModulePosition() throws Exception{
 		Method method = ProducerRecordCreator.class.getDeclaredMethod("getModulePosition", String.class);
 		method.setAccessible(true);
@@ -249,40 +272,10 @@ public class ProducerRecordCreatorTest {
 		c = (Integer) method.invoke(creator, "B999SOC");
 		Assert.assertEquals("999", c+"");
 		
-		c = (Integer) method.invoke(creator, "BSOC");
-		Assert.assertEquals("0", c+"");
+		
 		
 	}
 	
-	@Test
-	public void testSetKeyMap() throws Exception{
-		 
-		
-		
-		ProducerRecordCreator producerRecordCreator = new ProducerRecordCreator(null);
-//		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
-//		ResponseEntity entity = Mockito.mock(ResponseEntity.class);
-//		Mockito.when(restTemplate.getForEntity(Mockito.any(),Mockito.any())).thenReturn(entity);
-//		Mockito.when(entity.getBody()).thenReturn(Arrays.asList(this.keyMaps));
-//		
-//		Map<String, String> keyMap = new HashMap<>();
-//		Field rField = ProducerRecordCreator.class.getDeclaredField("keyMap");
-//		rField.setAccessible(true);
-//		rField.set(producerRecordCreator, keyMap);
-//		
-//		Field field = ProducerRecordCreator.class.getDeclaredField("restTemplate");
-//		field.setAccessible(true);
-//		field.set(producerRecordCreator, restTemplate);
-//		
-//		Method method = ProducerRecordCreator.class.getDeclaredMethod("setKeyMap");
-//		method.setAccessible(true);
-//		method.invoke(producerRecordCreator);
-//		
-//		System.out.println(keyMap);
-		
-		
-		
-	}
 	
 	@Test
 	public void testGetKeyIC() throws Exception{
@@ -461,6 +454,15 @@ public class ProducerRecordCreatorTest {
 		
 		index = (Integer)method.invoke(producerRecordCreator, "B3V876");
 		Assert.assertEquals("876", index+"");
+	}
+	
+	@Test
+	public void testGetPositionFromModule() throws Exception {
+		Method method = ProducerRecordCreator.class.getDeclaredMethod("getPositionFromModule", String.class);
+		method.setAccessible(true);
+		ProducerRecordCreator creator = new ProducerRecordCreator(null);
+		Integer c = (Integer) method.invoke(creator, "f92b3400-3298-11ee-980a-31ea805986ca");
+		Assert.assertEquals("2", c+"");
 	}
 	
 	

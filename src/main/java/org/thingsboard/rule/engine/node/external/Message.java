@@ -340,14 +340,23 @@ public class Message {
 	@JsonProperty("T3")
 	private String T3;
 	@JsonProperty("T4")
-	private String T5;
+	private String T4;
+	
+	@JsonProperty("BT1")
+	private String BT1;
+	@JsonProperty("BT2")
+	private String BT2;
+	@JsonProperty("BT3")
+	private String BT3;
+	@JsonProperty("BT4")
+	private String BT4;
 
 	@JsonProperty("V1")
 	private String V1;
 	@JsonProperty("V2")
 	private String V2;
 	@JsonProperty("V3")
-	private String v3;
+	private String V3;
 	@JsonProperty("V4")
 	private String V4;
 	@JsonProperty("V5")

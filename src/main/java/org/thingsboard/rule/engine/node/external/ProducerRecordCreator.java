@@ -15,17 +15,22 @@
  */
 package org.thingsboard.rule.engine.node.external;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.client.RestTemplate;
 
 public class ProducerRecordCreator {
 
@@ -42,8 +47,9 @@ public class ProducerRecordCreator {
 
 	private static Map<String, String> keyMap = new HashMap<>();
 	private static Map<String, Integer> partitionMap = new HashMap<>();
+	private static Map<String, Integer> positionMap = new HashMap<>();
 
-	private static RestTemplate restTemplate = new RestTemplate();
+	private static TransformerService transformerService = new TransformerService();
 
 	static {
 		setKeyMap();
@@ -72,14 +78,27 @@ public class ProducerRecordCreator {
 		for (Field field : fields) {
 			field.setAccessible(true);
 			Object val = field.get(this.message);
-			if (val == null ) {
+			if (val == null) {
 				continue;
 			}
 			String kafkaKey = getKafkaKey(field.getName());
-			if(kafkaKey == null) {
+			if (kafkaKey == null) {
 				continue;
 			}
-			Integer modulePosition = getModulePosition(field.getName());
+
+			String deviceId = this.message.getDeviceId();
+			Integer modulePosition = 1;
+			if(deviceId.equals("897d1ee0-327e-11ed-8506-f961a5b87d75") || deviceId.equals("140cd230-0e3a-11ed-9bda-0163f5a9393b")) {
+				modulePosition = getModulePosition(field.getName());
+			}else {
+				modulePosition = getPositionFromModule(deviceId);
+			}
+			
+			Integer customerId = transformerService.getCustomerId(deviceId);
+			if (customerId == null) {
+				logger.error("could not find customer ID of device: " + deviceId);
+				return;
+			}
 
 			if (kafkaKey.equals("strv")) {
 				Integer stringIndex = getStringIndexFromKey(field.getName());
@@ -90,12 +109,12 @@ public class ProducerRecordCreator {
 				if (msg != null) {
 					String kafkaJson = MAPPER.writeValueAsString(msg);
 					ProducerRecord<String, String> record = new ProducerRecord<String, String>(
-							TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+							TOPIC_NAME_PREFIX + deviceId + "." + modulePosition + "." + customerId,
 							partitionMap.get("strv"), "strv", kafkaJson);
 					this.records.add(record);
 				}
-			} else if(kafkaKey.equals("tmpSeries")){
-				
+			} else if (kafkaKey.equals("tmpSeries")) {
+
 				Integer stringIndex = getStringIndexFromKey(field.getName());
 
 				KafkaStringVoltageMessage msg = TEMP_STRING_VOLTAGES.check(
@@ -104,19 +123,19 @@ public class ProducerRecordCreator {
 				if (msg != null) {
 					String kafkaJson = MAPPER.writeValueAsString(msg);
 					ProducerRecord<String, String> record = new ProducerRecord<String, String>(
-							TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+							TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition + "." + customerId,
 							partitionMap.get("tmpSeries"), "tmpSeries", kafkaJson);
 					this.records.add(record);
 				}
-				
-			}else {
+
+			} else {
 				String value = (String) val;
 				KafkaMessage kafkaMessage = new KafkaMessage();
 				kafkaMessage.setValue(value);
 				kafkaMessage.setTs(this.message.getTs());
 				String kafkaJson = MAPPER.writeValueAsString(kafkaMessage);
 				ProducerRecord<String, String> record = new ProducerRecord<String, String>(
-						TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition,
+						TOPIC_NAME_PREFIX + this.message.getDeviceId() + "." + modulePosition + "." + customerId,
 						partitionMap.get(kafkaKey), kafkaKey, kafkaJson);
 
 				this.records.add(record);
@@ -144,13 +163,18 @@ public class ProducerRecordCreator {
 		}
 	}
 
+	/**
+	 * Sets value to KeyMap with matchable regex with all possible key combnations
+	 */
 	private static void setKeyMap() {
 
 		try {
 
 			Map<String, List<String>> keyMapT = new HashMap<>();
-			KeyMap[] keys = restTemplate.getForEntity("http://3.111.151.104:8085/api/profiles/key-map", KeyMap[].class)
-					.getBody();
+			String keysJson = getKeysFromTransformer();
+			ObjectMapper mapper = new ObjectMapper();
+			List<KeyMap> keys = mapper.readValue(keysJson, new TypeReference<List<KeyMap>>() {
+			});
 			for (KeyMap key : keys) {
 				putKeys("ic", key.getIc(), keyMapT);
 				putKeys("ic", key.getId(), keyMapT);
@@ -158,7 +182,7 @@ public class ProducerRecordCreator {
 				putKeys("soc", key.getSoc(), keyMapT);
 				putKeys("tmp", key.getTmp(), keyMapT);
 				putKeys("strv", key.getStrV(), keyMapT);
-				//putKeys("tmpSeries", key.getTmpSeries(), keyMapT);
+				// putKeys("tmpSeries", key.getTmpSeries(), keyMapT);
 				putKeys("capacity_discharge", key.getCapacityDischarge(), keyMapT);
 			}
 			for (String key : keyMapT.keySet()) {
@@ -189,13 +213,13 @@ public class ProducerRecordCreator {
 
 	}
 
-
 	private Integer getModulePosition(String keyName) {
-		if (keyName.matches("[^0-9]\\d+.+")) {
+		
+		if (keyName.matches("B\\d+.+")) {
 			Integer number = Integer.parseInt(keyName.split("[^0-9]+")[1]);
 			return number;
 		} else {
-			return 0;
+			return 1;
 		}
 
 	}
@@ -206,6 +230,51 @@ public class ProducerRecordCreator {
 
 	public void setRecords(List<ProducerRecord<String, String>> records) {
 		this.records = records;
+	}
+
+	/**
+	 * get all possible key mappings from transformer
+	 * 
+	 * @return return response from transformer api as string
+	 * @throws Exception
+	 */
+	private static String getKeysFromTransformer() throws Exception {
+		URL yahoo = new URL("http://3.111.151.104:8085/api/profiles/key-map");
+		URLConnection yc = yahoo.openConnection();
+		BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+		String inputLines = "";
+		String inputLine;
+
+		while ((inputLine = in.readLine()) != null)
+			inputLines += inputLine;
+		in.close();
+		return inputLines;
+	}
+
+	private static Integer getPositionFromModule(String moduleId) {
+		
+		Integer position = positionMap.get(moduleId);
+		if (position == null) {
+			try {
+				URL yahoo = new URL("http://3.111.151.104:8085/api/modules/uuid/" + moduleId);
+				URLConnection yc = yahoo.openConnection();
+				BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+				String inputLines = "";
+				String inputLine;
+
+				while ((inputLine = in.readLine()) != null)
+					inputLines += inputLine;
+				in.close();
+				String[] lines = inputLines.split(",");
+				String[] positionSplit = lines[5].split(":");
+				position = Integer.parseInt(positionSplit[1]);
+			} catch (Exception e) {
+				position = 1;
+			}
+			positionMap.put(moduleId, position);
+		}
+		return position;
+
 	}
 
 }
